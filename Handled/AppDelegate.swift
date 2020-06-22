@@ -7,15 +7,21 @@
 //
 
 import UIKit
-
+import CoreLocation
+import UserNotifications
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
-
-
-
+class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate{
+    let locationManager:CLLocationManager = CLLocationManager()
+          var currentLocation = CLLocation()
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        return true
+        self.locationManager.delegate = self
+              self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+              self.locationManager.requestAlwaysAuthorization()
+        self.locationManager.requestLocation()
+              
+              self.locationManager.startUpdatingLocation()
+         return true
     }
 
     // MARK: UISceneSession Lifecycle
@@ -31,7 +37,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
-
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+     if locations.count == 0
+     {
+     return
+     }
+     self.currentLocation = locations.first!
+    
+     }
+     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+     print("Fail to load location")
+     print(error.localizedDescription)
+     }
+        
 
 }
 
