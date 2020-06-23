@@ -11,9 +11,38 @@ import Foundation
 import WatchConnectivity
 
 class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationManagerDelegate {
+
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         return
     }
+    
+    
+    
+    @IBAction func displayMostUrgent() {
+        if(wcSession.isReachable){
+            
+        
+       let message = ["date":Date()]
+        wcSession.sendMessage(message, replyHandler: { (reply) in
+            let validLoc = reply["validLocation"] as! Bool
+            if(validLoc){
+                 let coordy = CLLocationCoordinate2D(latitude: reply["lat"] as! CLLocationDegrees, longitude: reply["longit"] as! CLLocationDegrees)
+                self.eventLocation = LocationModel(loc: coordy, dat: reply["date"] as! Date, descrip: reply["title"] as! String, veloc: reply["speed"] as! Double)
+                self.currentLocation = CLLocation(latitude: reply["latCurr"] as! CLLocationDegrees, longitude: reply["longitCurr"] as! CLLocationDegrees)
+                self.displayLocation()
+            }
+            else{
+                self.titleLabel.setText("No Upcoming Activities")
+            }
+            
+        }, errorHandler: {(error) in
+            print(error.localizedDescription)
+        })
+            
+        }
+        
+    }
+    
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         let retDict = message["message"] as! [String: Any]
@@ -22,16 +51,25 @@ class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationM
         currentLocation = CLLocation(latitude: message["lat"] as! CLLocationDegrees, longitude: message["longit"] as! CLLocationDegrees)
         print(currentLocation.coordinate.latitude)
         print(currentLocation.coordinate.longitude)
-        
+        displayLocation()
+       
+    }
+    
+    func displayLocation(){
         titleLabel.setText(eventLocation.title)
-        let dist = currentLocation.distance(from: CLLocation(latitude: eventLocation.lat, longitude: eventLocation.longit))
-        distanceLabel.setText(String(dist.description))
-        timerLabel.setDate(eventLocation.date!)
+        var dist = self.currentLocation.distance(from: eventLocation.calculateLocation())
+        dist = dist/1609 //convert meters to miles
+        var distString = String(format: "%.6f", dist)
+        distanceLabel.setText("\(distString) miles")
+               distanceLabel.setHidden(false)
+               timerLabel.setDate(eventLocation.date!)
+               timerLabel.setHidden(false)
+               timerLabel.start()
     }
     
     var wcSession: WCSession!
     var eventLocation: LocationModel!
-    
+    var didRecLoc: Bool = true
      var currentLocation = CLLocation()
     @IBOutlet weak var titleLabel: WKInterfaceLabel!
     
@@ -57,7 +95,7 @@ class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationM
 //       wcSession.delegate = self
 //       wcSession.activate()
         titleLabel.setText("Please select a Location on the iOS App")
-       
+        timerLabel.setHidden(true)
         
     }
     

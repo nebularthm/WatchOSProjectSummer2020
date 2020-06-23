@@ -35,12 +35,11 @@ class LocationModel: NSObject, Codable {
         speed = veloc
     }
     
-      static func saveToDoInfo(_ locDataBase: [LocationModel]) -> Bool {
+      static func saveLocationData(_ locDataBase: [LocationModel]) -> Bool {
             var outputData = Data()
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(locDataBase) {
                 if let json = String(data: encoded, encoding: .utf8) {
-                    print(json)
                     outputData = encoded
                 }
                 else { return false }
@@ -48,7 +47,7 @@ class LocationModel: NSObject, Codable {
                 do {
                         try outputData.write(to: ArchiveURL)
                 } catch let error as NSError {
-                    print (error)
+                    print (error.localizedDescription)
                     return false
                 }
                 return true

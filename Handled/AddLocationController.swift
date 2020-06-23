@@ -119,10 +119,12 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
             }
             if(!validAdd){
                 outLabel.text = "Please provide a valid address"
+                outLabel.textColor = .red
                 return false
             }
             if(!checkSpeed()){
                 outLabel.text = "Please enter a valid speed"
+                outLabel.textColor = .red
                 return false
             }
             if(!checkFields()){

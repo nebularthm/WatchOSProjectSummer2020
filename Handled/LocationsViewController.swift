@@ -5,12 +5,12 @@
 //  Created by Michael Williams on 6/15/20.
 //  Copyright © 2020 ECE564. All rights reserved.
 //
-//https://www.google.com/url?sa=i&url=https%3A%2F%2Flogodix.com%2Fblack-h&psig=AOvVaw375h8elAANqmjRAcNdfpEC&ust=1592908614417000&source=images&cd=vfe&ved=0CAIQjRxqFwoTCIC5_ZudleoCFQAAAAAdAAAAABAD
+
 import UIKit
 import CoreLocation
 import WatchConnectivity
 import UserNotifications
-class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchResultsUpdating, UNUserNotificationCenterDelegate{
+class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchResultsUpdating, UNUserNotificationCenterDelegate, CLLocationManagerDelegate{
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         return
     }
@@ -22,19 +22,41 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
     func sessionDidDeactivate(_ session: WCSession) {
         return
     }
+    func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
+        let urgentLocation = mostUrgentLoc(message["date"] as! Date)
+        var retDict = self.convertLocToDict(urgentLocation)
+        retDict["latCurr"] = currentLocation.coordinate.latitude
+        retDict["longitCurr"] = currentLocation.coordinate.longitude
+        replyHandler(retDict)
+    }
+    func mostUrgentLoc(_ date:Date)->LocationModel?{
+        var urgLoc:LocationModel? = nil
+        
+        for location in database{
+            //we are only interested in locations in the future not the past
+            if(urgLoc == nil && location.date! >= date){
+                urgLoc = location
+            }
+            if(urgLoc != nil && location.date! <= (urgLoc?.date)!){
+                urgLoc = location
+            }
+        }
+        
+        return urgLoc
+    }
     
     var wcSession: WCSession! = nil
     var database = [LocationModel]()
     var loc: LocationModel? = nil
-//    let locationManager:CLLocationManager = CLLocationManager()
        var currentLocation = CLLocation()
     
     var filteredDatabase = [LocationModel]()
     var resultSearchController = UISearchController()
     let userNotificationCenter = UNUserNotificationCenter.current()
-
+    let locationManager:CLLocationManager = CLLocationManager()
     override func viewDidLoad() {
         super.viewDidLoad()
+        //updateLocation()
         if WCSession.isSupported(){
                wcSession = WCSession.default
                      wcSession.delegate = self
@@ -42,6 +64,7 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
               
               }
          loadInitialData()
+        setUpLocation()
         resultSearchController = ({
             let controller = UISearchController(searchResultsController: nil)
             controller.searchResultsUpdater = self
@@ -58,9 +81,37 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
           }
       }
         self.userNotificationCenter.delegate = self
-        updateLocation()
+        
         tableView.reloadData()
     }
+    
+    func setUpLocation(){
+        self.locationManager.delegate = self
+                     self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+                     
+               self.locationManager.requestLocation()
+                    self.locationManager.requestAlwaysAuthorization()
+                     self.locationManager.startUpdatingLocation()
+    }
+    
+    
+    
+    
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if locations.count == 0
+        {
+        return
+        }
+        self.currentLocation = locations.first!
+       
+        }
+        func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Fail to load location")
+        print(error.localizedDescription)
+        }
+    
+    
     
     
     func loadInitialData(){
@@ -75,7 +126,7 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
         let firstCoord:CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 40.748540, longitude: -73.568280)
             let firstLoc = LocationModel(loc: firstCoord, dat: firstDate, descrip: "Random Point", veloc: 3.5)
         database.append(firstLoc)
-            let _ = LocationModel.saveToDoInfo(database)
+            let _ = LocationModel.saveLocationData(database)
         }
     }
     func searchForMatch(_ query: LocationModel)->(exists: Bool, target: LocationModel){
@@ -131,15 +182,20 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
 
         cell.textLabel?.text = tempLocation.title
             cell.textLabel?.font = UIFont.systemFont(ofSize: 15)
-        cell.detailTextLabel?.text = tempLocation.date?.description
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
+        cell.detailTextLabel?.text = dateFormatter.string(from: tempLocation.date!)
             cell.detailTextLabel?.font = UIFont(name: "AmericanTypewriter", size: 15)
             cell.detailTextLabel?.lineBreakMode = .byWordWrapping
             cell.detailTextLabel?.numberOfLines = 0
             
             return cell
     }
-    func convertLocToDict(_ location: LocationModel) -> [String: Any]{
-        return ["lat": location.lat, "longit": location.longit, "date":location.date, "title":location.title, "speed":location.speed]
+    func convertLocToDict(_ location: LocationModel?) -> [String: Any]{
+        if(location == nil){
+            return ["validLocation":false]
+        }
+        return ["lat": location!.lat, "longit": location!.longit, "date":location!.date, "title":location!.title, "speed":location!.speed,"validLocation":true]
     }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
                if(inSearchMode()){
@@ -150,7 +206,6 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
                
                loc = self.database[indexPath.row]
                }
-        updateLocation()
         //in the simulator, our location is 200 West 47th Street, New York, NY 10036
         var retDict = convertLocToDict(loc!)
         let message = ["message":retDict, "lat":currentLocation.coordinate.latitude, "longit":currentLocation.coordinate.longitude] as [String : Any]
@@ -167,12 +222,7 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
         tableView.reloadData()
     }
     
-    func updateLocation(){
-        let dele = UIApplication.shared.delegate as! AppDelegate
-        currentLocation = dele.currentLocation
-        print(currentLocation.coordinate.latitude)
-        print(currentLocation.coordinate.longitude)
-    }
+    
     @IBAction func returnFromNewItem(segue: UIStoryboardSegue) {
         
         
@@ -187,13 +237,13 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
                 self.scheduleNotification(addedLoc)
             }
             
-            let _ = LocationModel.saveToDoInfo(database)
+            let _ = LocationModel.saveLocationData(database)
             tableView.reloadData()
         case is EditLocationController:
             let source = segue.source as! EditLocationController
             editLocation(source.editLoc, oldLocation: source.oldLoc)
             self.scheduleNotification(source.editLoc)
-            let _ = LocationModel.saveToDoInfo(database)
+            let _ = LocationModel.saveLocationData(database)
             self.tableView.reloadData()
         default:
             self.tableView.reloadData()
@@ -314,11 +364,11 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
                                             let dex = self.database.firstIndex(of: removedPerson)!
                                             self.database.remove(at: dex)
                                         
-                             let _ = LocationModel.saveToDoInfo(self.database)
+                             let _ = LocationModel.saveLocationData(self.database)
                                     }
                                     else{
                                 self.database.remove(at: indexPath.row)
-                             let _ = LocationModel.saveToDoInfo(self.database)
+                             let _ = LocationModel.saveLocationData(self.database)
                                     
                  }
                               self.tableView.reloadData()
