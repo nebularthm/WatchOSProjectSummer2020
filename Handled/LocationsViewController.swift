@@ -96,6 +96,22 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
         //set up notificaiton delegate and notification options, as well as req authorization
         let authOptions = UNAuthorizationOptions.init(arrayLiteral: .alert,.sound)
       self.userNotificationCenter.requestAuthorization(options: authOptions) { (success, error) in
+        //If we get authoriation, we are gonna set a categroy/action for reminding the user in 30 seconds
+        if success{
+            //the action itself for remdning the user
+            let remindAction = UNNotificationAction(
+            identifier: "remind",
+            title: "Remind in 30 Sec",
+            options: [])
+            //category that contains the remind action
+            let remindCategory = UNNotificationCategory(
+            identifier: "remind.category",
+            actions: [remindAction],
+            intentIdentifiers: [],
+            options: [])
+            //push the category to the userNotificationCenter
+            self.userNotificationCenter.setNotificationCategories([remindCategory])
+        }
           if let error = error {
             print(error.localizedDescription)
           }
@@ -382,11 +398,14 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
 
     //Ise this method to schedule a notifcation for a location object
     //code for thsi was inspired by https://programmingwithswift.com/how-to-send-local-notification-with-swift-5/
+    //https://makeapppie.com/2016/12/05/add-actions-and-categories-to-notification-in-swift/
     func scheduleNotification(_ location:LocationModel) {
         let notificationContent = UNMutableNotificationContent()
         // Add the content to the notification content
         notificationContent.title = location.title!//the title of the notifcaiton will be same as event title
            notificationContent.body = "Leave now to get to this event"
+        notificationContent.sound = UNNotificationSound.defaultCritical
+        notificationContent.categoryIdentifier = "remind.category"
         //calculate distance between the event location and the current location
         let dist: Double = location.calculateLocation().distance(from: currentLocation)
         let timeTo:Double = (location.date?.timeIntervalSince(Date()))!//this tells how long until the date of the activity from the current date in seconds
@@ -413,9 +432,26 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
                }
            }
     }
+
     //Next 2 methods are used for displaying a notificaiton in theforegorund of theapp, this completion handler is for recieving a notifcation
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         completionHandler()
+        //this part is for the remind action
+        let request = response.notification.request//get the request and identifier for this action
+        if response.actionIdentifier == "remind"{
+            let newContent = request.content.mutableCopy() as! UNMutableNotificationContent
+            //copy the content from the prev notification
+            let newTrigger = UNTimeIntervalNotificationTrigger(timeInterval: 30, repeats: false)//Set up a new trigger
+            let newrequest = UNNotificationRequest(identifier: request.identifier,
+                                                          content: newContent,
+                                                          trigger: newTrigger)//push a new request to the notificaiton center
+                      
+                      userNotificationCenter.add(newrequest) { (error) in
+                          if let error = error {
+                           print(error.localizedDescription)
+                          }
+                      }
+        }
     }
     //this completion hanlder is for presenting the alert and sound on screen
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
