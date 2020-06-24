@@ -11,7 +11,7 @@ import Foundation
 import WatchConnectivity
 
 class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationManagerDelegate {
-
+    
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         return
     }
@@ -19,12 +19,16 @@ class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationM
     
     
     @IBAction func displayMostUrgent() {
+        
+        //make sure phone is in reach before sending it a message
         if(wcSession.isReachable){
             
-        
+        //send the phone the current date
        let message = ["date":Date()]
         wcSession.sendMessage(message, replyHandler: { (reply) in
+            //parse the reply from the phone
             let validLoc = reply["validLocation"] as! Bool
+            //If there are any activities available, display them
             if(validLoc){
                  let coordy = CLLocationCoordinate2D(latitude: reply["lat"] as! CLLocationDegrees, longitude: reply["longit"] as! CLLocationDegrees)
                 self.eventLocation = LocationModel(loc: coordy, dat: reply["date"] as! Date, descrip: reply["title"] as! String, veloc: reply["speed"] as! Double)
@@ -43,18 +47,16 @@ class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationM
         
     }
     
-    
+    //The phone will send us data in the form of a Dict, parse that data and display it on the screen
     func session(_ session: WCSession, didReceiveMessage message: [String : Any]) {
         let retDict = message["message"] as! [String: Any]
         let coordy = CLLocationCoordinate2D(latitude: retDict["lat"] as! CLLocationDegrees, longitude: retDict["longit"] as! CLLocationDegrees)
         eventLocation = LocationModel(loc: coordy, dat: retDict["date"] as! Date, descrip: retDict["title"] as! String, veloc: retDict["speed"] as! Double)
         currentLocation = CLLocation(latitude: message["lat"] as! CLLocationDegrees, longitude: message["longit"] as! CLLocationDegrees)
-        print(currentLocation.coordinate.latitude)
-        print(currentLocation.coordinate.longitude)
         displayLocation()
        
     }
-    
+    //Used to update the detail view after recieving data from apple watch
     func displayLocation(){
         titleLabel.setText(eventLocation.title)
         var dist = self.currentLocation.distance(from: eventLocation.calculateLocation())
@@ -102,6 +104,7 @@ class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationM
     override func willActivate() {
         // This method is called when watch view controller is about to be visible to user
         super.willActivate()
+        //wheneever the watch is going to activiate, engage the wcSession
         wcSession = WCSession.default
         wcSession.delegate = self
         wcSession.activate()

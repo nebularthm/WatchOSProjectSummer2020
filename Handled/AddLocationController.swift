@@ -12,18 +12,21 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
 
     
     
-    
+    //properties for added view controller
     var addedLocation: LocationModel?
     
     var addressDecode: CLGeocoder?
     var addressString: String?
     var eventTitle: String?
-    var selectedDate: Date?
+    //set this to current date coz only updates if value changed
+    var selectedDate: Date? = Date()
     var validAdd = true
     var coord: CLLocationCoordinate2D?
+    //bool for if we cancelled without creating a LocationModel
     var hasNewLoc: Bool = true
     var velocity: Double?
     var velocityStr: String?
+    //subviews
     @IBOutlet weak var addressField: UITextField!
     
     @IBOutlet weak var outLabel: UILabel!
@@ -36,7 +39,7 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var datePick: UIDatePicker!
     
-    
+    //Update date when the value on the datePicker changes
     @IBAction func pickDate(_ sender: Any) {
         selectedDate = datePick.date
     }
@@ -59,29 +62,32 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        //used for converting the address string into an actual location
         addressDecode = CLGeocoder()
+        //set delegates of all of the text fields
         titleField.delegate = self
         addressField.delegate = self
         speedField.delegate = self
         // Do any additional setup after loading the view.
     }
-    
+    //for converting an address into a location
     func convertToLoc(){
+        //if address is empty it is automatically bad
         if(addressString?.count == 0 || addressString == nil){
             validAdd = false
             return
         }
+        //start decoding
         addressDecode!.geocodeAddressString(addressString!, completionHandler: {(placemarks, error) -> Void in
+            //if an error with no placemarks, then the address was bad
         if((error) != nil){
-           print("Error", error)
-            print("we lowkey have an error")
+            print(error?.localizedDescription)
             self.validAdd = false
         }
-            
+            //if address has placemarks then it is not bad, use coord of first placemark
         if let placemark = placemarks?.first {
             self.validAdd = true
             self.coord = placemark.location!.coordinate
-            print(self.coord)
            }
          })
     }
@@ -92,6 +98,7 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
             case addressField:
                 addressString = textField.text!
                 addressField.resignFirstResponder()
+                //convert to location once the string is acquired
                 convertToLoc()
                 return true
             case titleField:
@@ -114,24 +121,29 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
         }
         //you should either do a return segue if you have not edited anyhting, or you should not do one if editiing is not finished
         override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+            //if we are cancelling then always segue
             if ((sender as! UIBarButtonItem) == self.cancelButton)  {
                 return true
             }
+            //if the address provided is not valid, then a segue should not be formed until one is acquired
             if(!validAdd){
                 outLabel.text = "Please provide a valid address"
                 outLabel.textColor = .red
                 return false
             }
+            //if speed is not a number then also do not segue
             if(!checkSpeed()){
                 outLabel.text = "Please enter a valid speed"
                 outLabel.textColor = .red
                 return false
             }
+            //if the textfields provided empty strings, then do not segue
             if(!checkFields()){
                 outLabel.text = "Please Fill out all Text Fields Before Saving"
                 outLabel.textColor = .red
                 return false
             }
+            //just segue anyway at this point
             return true
         }
         /*
@@ -145,6 +157,7 @@ class AddLocationController: UIViewController, UITextFieldDelegate {
         */
         
         override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+            //if we cancelled then we do not have a new loc
             if ((sender as! UIBarButtonItem) == self.cancelButton)  {
                 self.hasNewLoc = false
                 return

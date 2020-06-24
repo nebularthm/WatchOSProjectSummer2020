@@ -11,6 +11,7 @@
 import UIKit
 import CoreLocation
 class LocationModel: NSObject, Codable {
+    //Used for determining index of this instance when inside of the database
     static func == (lhs: LocationModel, rhs: LocationModel) -> Bool {
         return lhs.lat == rhs.lat && lhs.longit == rhs.longit && lhs.date == rhs.date && lhs.title == rhs.title && lhs.speed == rhs.speed
         }
@@ -34,7 +35,7 @@ class LocationModel: NSObject, Codable {
         title = descrip
         speed = veloc
     }
-    
+    //Saves database to memory
       static func saveLocationData(_ locDataBase: [LocationModel]) -> Bool {
             var outputData = Data()
             let encoder = JSONEncoder()
@@ -54,7 +55,7 @@ class LocationModel: NSObject, Codable {
             }
             else { return false }
         }
-        
+        //Loads database from memory using JSON decoder
         static func loadToDoInfo() -> [LocationModel]? {
             let decoder = JSONDecoder()
             var locDataBase = [LocationModel]()
@@ -63,7 +64,7 @@ class LocationModel: NSObject, Codable {
             do {
                 tempData = try Data(contentsOf: ArchiveURL)
             } catch let error as NSError {
-                print(error)
+                print(error.localizedDescription)
                 return nil
             }
             if let decoded = try? decoder.decode([LocationModel].self, from: tempData) {
@@ -72,25 +73,24 @@ class LocationModel: NSObject, Codable {
     
             return locDataBase
         }
-    
-
-    
-    static func calcTimeForNotif(_ location: LocationModel){
-        let currDate = Date()
-        
-    }
-    
+    //create CLL location from lat and longitude of this instance
     func calculateLocation()-> CLLocation{
         return CLLocation(latitude: self.lat, longitude: self.longit)
     }
     //this func is for calculating the amount of seconds between points, provided you have the distance
     func calculateTimeInterval(_ distance:Double)-> Double{
+        //if speed is less than or equal to then let shceudler know to send notifcation ASAP
         if speed <= 0{
             return 0
         }
+            //LEt notfication sheduler to know to how long itg will take us to get to a location
         else{
             let meterSpeed = speed/miles2meters
             return distance * (1/meterSpeed)
         }
+    }
+    //Hopefully this func lets us return a copy of this instance
+    func copyLocation()->LocationModel{
+        return LocationModel(loc: self.calculateLocation().coordinate, dat: self.date!, descrip: self.title!, veloc: self.speed)
     }
 }

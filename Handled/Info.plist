@@ -61,8 +61,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>please</string>
+	<string>Please give HAndled permission to use your current location in order to give you distance based reminders for your events</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>pls</string>
+	<string>Please give Handled permission to use your current location in order to give you distance based reminders for your activities</string>
 </dict>
 </plist>
