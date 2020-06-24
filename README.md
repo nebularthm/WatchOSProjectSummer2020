@@ -24,7 +24,7 @@ Included in this readme will be sections for basic use of the app, a tutorial fo
 * If you are too slow to make an event in time, you will automatically receive a notification to leave in 10 seconds
 * For addresses entered for events, be as specific as possible, as it is currently unclear what the priority for PlaceMarks is. It is recommended to use as much of a postal address as possible, with Street Name, City Name, and Zipcode in the address. If there is a discrepancy in the distance to a location, try making the address more specific by including the full postal address. The current postal address can be seen in the Address Textfield on the edit Screen for a particular LocationModel
 * You cannot save 2 events with the exact same date, because logically you cannot be in 2 places at once. IF you attempt to create 2 events with the exact same date the last one will be replaced by the new one. You can test this by creating a recurrence of an event with the swipe, then trying to do it again. 
-
+* Old events are only automatically removed when adding or editing another event
 
 
 # Tutorial
