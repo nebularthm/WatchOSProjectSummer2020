@@ -502,7 +502,7 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
         let repeatAction = UITableViewRowAction(style: .normal, title: "Repeat", handler:{ (action: UITableViewRowAction, indexPath: IndexPath) -> Void in
             let repeatedLocation:LocationModel = self.database[indexPath.row].copyLocation()
             repeatedLocation.date = Date(timeInterval: weekInSeconds, since: repeatedLocation.date!)
-            self.database.append(repeatedLocation)
+            self.addLocation(repeatedLocation)
             self.scheduleNotification(repeatedLocation)
             let _ = LocationModel.saveLocationData(self.database)
             self.tableView.reloadData()
