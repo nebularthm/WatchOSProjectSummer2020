@@ -61,7 +61,7 @@ class InterfaceController: WKInterfaceController, WCSessionDelegate, CLLocationM
         titleLabel.setText(eventLocation.title)
         var dist = self.currentLocation.distance(from: eventLocation.calculateLocation())
         dist = dist/1609 //convert meters to miles
-        var distString = String(format: "%.6f", dist)
+        let distString = String(format: "%.6f", dist)
         distanceLabel.setText("\(distString) miles")
                distanceLabel.setHidden(false)
                timerLabel.setDate(eventLocation.date!)

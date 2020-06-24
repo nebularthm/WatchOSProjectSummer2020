@@ -50,17 +50,17 @@
             </objects>
             <point key="canvasLocation" x="220" y="643"/>
         </scene>
-        <!--Dynamic Notification Interface Controller-->
+        <!--Notification Controller-->
         <scene sceneID="h4x-Je-Cti">
             <objects>
-                <controller id="i4K-i2-amv"/>
+                <controller id="i4K-i2-amv" customClass="NotificationController" customModule="handledCompanion_Extension"/>
             </objects>
             <point key="canvasLocation" x="520" y="643"/>
         </scene>
-        <!--Dynamic Interactive Notification Interface Controller-->
+        <!--Notification Controller-->
         <scene sceneID="EnR-E5-7cm">
             <objects>
-                <controller id="CsM-fv-9OM"/>
+                <controller id="CsM-fv-9OM" customClass="NotificationController" customModule="handledCompanion_Extension"/>
             </objects>
             <point key="canvasLocation" x="520" y="343"/>
         </scene>

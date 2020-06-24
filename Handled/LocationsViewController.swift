@@ -164,7 +164,7 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
             
         
         //This location will correspond to 839 Edgewood Drive New York, NY 10031, a randomly generated location in NYC
-        var firstDate:Date = Date(timeInterval: 150000, since: Date())
+            let firstDate:Date = Date(timeInterval: 150000, since: Date())
         let firstCoord:CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 40.748540, longitude: -73.568280)
             let firstLoc = LocationModel(loc: firstCoord, dat: firstDate, descrip: "Random Point", veloc: 3.5)
         database.append(firstLoc)
@@ -293,7 +293,7 @@ class LocationsViewController: UITableViewController,WCSessionDelegate,UISearchR
                }
         //in the simulator, our location is 200 West 47th Street, New York, NY 10036
         //convert a LocationModel into a dict for messaging
-        var retDict = convertLocToDict(loc!)
+        let retDict = convertLocToDict(loc!)
         //format message with this dict, and with current location data
         let message = ["message":retDict, "lat":currentLocation.coordinate.latitude, "longit":currentLocation.coordinate.longitude] as [String : Any]
             //Only send a message now if the watchSession is supported
